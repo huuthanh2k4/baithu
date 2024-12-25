@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey App</title>
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNFQbKCFQjHzJwEO2kuRyo3Tyr63FUlWw",
+      authDomain: "bai-test-2ae56.firebaseapp.com",
+      databaseURL: "https://bai-test-2ae56-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bai-test-2ae56",
+      storageBucket: "bai-test-2ae56.firebasestorage.app",
+      messagingSenderId: "152935522979",
+      appId: "1:152935522979:web:070ca9c7da4a4867959516",
+      measurementId: "G-9RQJH9ZCBJ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // DOM references
+    const btnYes = document.getElementById("btn-yes");
+    const btnNo = document.getElementById("btn-no");
+    const btnAddInfo = document.getElementById("btn-add-info");
+    const newInfoInput = document.getElementById("new-info");
+    const responsesList = document.getElementById("responses-list");
+
+    // Function to add a response
+    const addResponse = (response) => {
+      const userId = `user_${Date.now()}`; // Unique user ID
+      set(ref(database, `responses/${userId}`), {
+        response,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
+    // Function to add new information
+    const addNewInfo = (info) => {
+      const infoId = `info_${Date.now()}`; // Unique info ID
+      set(ref(database, `responses/${infoId}`), {
+        response: info,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
+    // Function to delete a response
+    const deleteResponse = (id) => {
+      remove(ref(database, `responses/${id}`));
+    };
+
+    // Event listeners
+    btnYes.addEventListener("click", () => addResponse("Yes"));
+    btnNo.addEventListener("click", () => addResponse("No"));
+    btnAddInfo.addEventListener("click", () => {
+      const newInfo = newInfoInput.value.trim();
+      if (newInfo) {
+        addNewInfo(newInfo);
+        newInfoInput.value = ""; // Clear input field
+      }
+    });
+
+    // Listen for changes in the database
+    const responsesRef = ref(database, "responses");
+    onValue(responsesRef, (snapshot) => {
+      responsesList.innerHTML = ""; // Clear current list
+      const responses = snapshot.val();
+      if (responses) {
+        Object.keys(responses).forEach((key) => {
+          const li = document.createElement("li");
+          li.textContent = `${responses[key].response} - ${responses[key].timestamp}`;
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = "Delete";
+          deleteButton.style.marginLeft = "10px";
+          deleteButton.addEventListener("click", () => deleteResponse(key));
+          li.appendChild(deleteButton);
+          responsesList.appendChild(li);
+        });
+      }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .question-container, .response-container {
+      margin: 20px 0;
+    }
+    .form-container {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Survey App</h1>
+
+  <!-- Question Section -->
+  <div class="question-container">
+    <h2>Question:</h2>
+    <p id="question-text">Do you like this app?</p>
+    <button id="btn-yes">Yes</button>
+    <button id="btn-no">No</button>
+  </div>
+
+  <!-- Add New Info Section -->
+  <div class="form-container">
+    <h2>Add New Information:</h2>
+    <input type="text" id="new-info" placeholder="Enter new info">
+    <button id="btn-add-info">Add</button>
+  </div>
+
+  <!-- Responses Section -->
+  <div class="response-container">
+    <h3>Responses:</h3>
+    <ul id="responses-list"></ul>
+  </div>
+</body>
+</html>
