@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vn">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Survey App</title>
+  <title>Survey App with User Tracking</title>
   <script type="module">
     // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
     // Firebase configuration
-    const firebaseConfig = {
+      const firebaseConfig = {
       apiKey: "AIzaSyBNFQbKCFQjHzJwEO2kuRyo3Tyr63FUlWw",
       authDomain: "bai-test-2ae56.firebaseapp.com",
       databaseURL: "https://bai-test-2ae56-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -25,6 +25,27 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
+    // User ID Tracking
+    const setCookie = (name, value, days) => {
+      const date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+    };
+
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+    };
+
+    // Create or retrieve User ID
+    let userId = localStorage.getItem("userId") || getCookie("userId");
+    if (!userId) {
+      userId = `user_${Date.now()}`;
+      localStorage.setItem("userId", userId);
+      setCookie("userId", userId, 365); // Store in cookie for 1 year
+    }
+
     // DOM references
     const btnYes = document.getElementById("btn-yes");
     const btnNo = document.getElementById("btn-no");
@@ -34,7 +55,6 @@
 
     // Function to add a response
     const addResponse = (response) => {
-      const userId = `user_${Date.now()}`; // Unique user ID
       set(ref(database, `responses/${userId}`), {
         response,
         timestamp: new Date().toISOString(),
@@ -43,7 +63,7 @@
 
     // Function to add new information
     const addNewInfo = (info) => {
-      const infoId = `info_${Date.now()}`; // Unique info ID
+      const infoId = `info_${Date.now()}`;
       set(ref(database, `responses/${infoId}`), {
         response: info,
         timestamp: new Date().toISOString(),
@@ -62,7 +82,7 @@
       const newInfo = newInfoInput.value.trim();
       if (newInfo) {
         addNewInfo(newInfo);
-        newInfoInput.value = ""; // Clear input field
+        newInfoInput.value = "";
       }
     });
 
@@ -99,7 +119,7 @@
   </style>
 </head>
 <body>
-  <h1>Survey App</h1>
+  <h1>Survey App with User Tracking</h1>
 
   <!-- Question Section -->
   <div class="question-container">
